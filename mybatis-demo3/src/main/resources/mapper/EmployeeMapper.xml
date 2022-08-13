@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zlh.mybatis.bean.EmployeeMapper">
+
+    <select id="getEmpById" resultType="employee" databaseId="mysql">
+        select * from t_employee where id = #{id}
+    </select>
+
+    <!--useGeneratedKeys="true":使用自增主键获取主键值策略
+        keyProperty:指定对应的主键属性,当mybatis获得到主键属性值后,将这个值封装给javaBean的某个属性值
+    -->
+    <insert id="addEmp" parameterType="com.zlh.mybatis.bean.Employee" useGeneratedKeys="true" keyProperty="id">
+        insert into t_employee(last_name,email,gender) values (#{lastName},#{email},#{gender})
+    </insert>
+
+    <update id="update" parameterType="com.zlh.mybatis.bean.Employee">
+        update t_employee set last_name=#{lastName},email=#{email},gender=#{gender}
+        where id=#{id}
+    </update>
+
+    <delete id="deleteEmpById">
+        delete from t_employee where id = #{id}
+    </delete>
+
+    <select id="getEmpByIdAndLastName" resultType="employee">
+        select * from t_employee where id = #{id} and last_name = #{lastName}
+    </select>
+
+    <!--
+    1.#与$的区别
+        #{}是以预编译的形式将参数设置到sql语句中,防止sql注入
+        ${}取出的值直接拼装到sql语句中
+        大多情况下使用#{},原生jdbc不支持占位符的地方就可以使用${},如在分表时:
+            按照年份分表拆分:select * from 2016_salary/2017_salary
+    2.#{}用法
+        规定的一些规则:
+            javaType,jdbcType,mode(存储过程),numericScale,resultMap,typeHandler...
+        jdbcType通常需要在某种特定情况下被设置:
+            在我们数据为null的时候,有些数据库可能不被识别mybatis对null的默认处理,如oracle
+            报错:JdbcType OTHER:无效的类型,因为mybatis对所有的null都映射的是原生Jdbc的OTHER类型,oracle不能识别
+            1).需要设置jdbcType: #{email,jdbcType=NULL}
+            2).修改全局配置(setting): jdbcTypeForNull = NULL
+    -->
+    <select id="getEmpByMap" resultType="employee">
+        select * from t_employee where id = ${id} and last_name = #{lastName}
+    </select>
+
+
+    <select id="selectEmp" resultType="employee">
+        select * from t_employee where id = #{ids[0]} and last_name like #{emp.lastName}
+    </select>
+</mapper>

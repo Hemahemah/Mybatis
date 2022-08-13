@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zlh.mybatis.bean.EmployeeMapper">
+    <!--如果返回集合List,resultType写集合元素类型-->
+    <select id="getEmpByLastNameLikeReturnList" resultType="Employee">
+        select * from t_employee where last_name like #{lastName}
+    </select>
+
+    <!--返回集合Map-->
+    <select id="getEmpByIdReturnMap" resultType="map">
+        select * from t_employee where id = #{id}
+    </select>
+
+    <select id="getEmpByLastNameLikeReturnMap" resultType="employee">
+        select * from t_employee where last_name like #{lastName}
+    </select>
+</mapper>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zlh.mybatis.bean.EmployeePlusMapper">
+
+    <!--
+        resultMap:自定义某个JavaBean的封装规则
+            type:自定义规则的Java类型
+            id:唯一标识
+            id标签:指定主键列的封装规则(id定义主键底层有优化)
+                column:对应的数据字段
+                property:对应的实体类属性
+            result标签:指定普通列的封装规则
+     -->
+    <resultMap id="MyEmp" type="employee">
+        <id column="id" property="id"/>
+        <result column="last_name" property="lastName"/>
+        <!--不指定的列将自动封装,建议都写上-->
+        <result column="email"  property="email"/>
+    </resultMap>
+
+    <select id="getEmpById"  resultMap="MyEmp">
+        select * from t_employee where id = #{id}
+    </select>
+
+    <!--
+        场景1:查出员工的同时并且查出所在部门的信息
+            1).采用级联属性封装结果
+    -->
+    <resultMap id="MyEmpPlus" type="com.zlh.mybatis.bean.Employee">
+        <id column="id" property="id"/>
+        <result column="last_name" property="lastName"/>
+        <result column="email"  property="email"/>
+        <result column="gender" property="gender"/>
+        <result column="did" property="dept.id"/>
+        <result column="dept_name" property="dept.departmentName"/>
+    </resultMap>
+    <!--
+        2).association标签:可以指定联合的JavaBean对象
+            property:指定哪个属性是联合的java对象
+            javaType:指定这个属性对象的类型
+    -->
+    <resultMap id="MyEmpPlus2" type="com.zlh.mybatis.bean.Employee">
+        <id column="id" property="id"/>
+        <result column="last_name" property="lastName"/>
+        <result column="email"  property="email"/>
+        <result column="gender" property="gender"/>
+        <association property="dept" javaType="com.zlh.mybatis.bean.Department">
+            <id column="did" property="id"/>
+            <result column="dept_name" property="departmentName"/>
+        </association>
+    </resultMap>
+    <select id="getEmpAndDeptById" resultMap="MyEmpDis">
+        select e.id id,e.last_name last_name,e.email email,e.gender gender,e.d_id d_id,d.id did,d.dept_name dept_name from  t_employee e join t_dept d
+            on e.d_id = d.id where e.id = #{id}
+    </select>
+    <!--
+        3).使用association进行分步查询,使用select指定的方法(传入column指定的这列参数的值)查出对象,并封装给property指定的属性
+                先按员工id查询员工信息
+                根据员工信息中的d_id去部门表查出员工信息
+                把部门设置到员工属性中
+            select:表示当前属性是调用select指定的方法查出的结果
+            column:指定将那一列的值传给这个方法
+           分布查询支持延迟加载(在全局配置文件中设置)
+    -->
+    <resultMap id="MyEmpByStep" type="com.zlh.mybatis.bean.Employee">
+        <id column="id" property="id"/>
+        <result column="last_name" property="lastName"/>
+        <result column="email"  property="email"/>
+        <result column="gender" property="gender"/>
+        <!--定义关联对象-->
+        <association property="dept"
+                     select="com.zlh.mybatis.bean.DepartmentMapper.getDeptById" column="d_id"/>
+    </resultMap>
+    <select id="getEmpByIdStep" resultMap="MyEmpByStep">
+        select * from t_employee where id = #{id}
+    </select>
+
+
+    <!--
+        场景2:查询部门和部门对应所有员工的信息
+    -->
+    <select id="getEmpsByDeptId" resultType="com.zlh.mybatis.bean.Employee">
+        select * from t_employee where d_id = #{deptId}
+    </select>
+
+    <!--
+        discriminator标签:鉴别器,mybatis可以使用discriminator根据某列的值改变封装行为
+            column:指定判定的语句
+            javaType:列值的java类型
+        需求:封装employee,如果是女生,把部门信息查询出来,如果是男生,把last_name赋值给email
+    -->
+    <resultMap id="MyEmpDis" type="com.zlh.mybatis.bean.Employee">
+        <id column="id" property="id"/>
+        <result column="last_name" property="lastName"/>
+        <result column="email"  property="email"/>
+        <result column="gender" property="gender"/>
+
+        <discriminator javaType="string" column="gender">
+            <!--女生-->
+            <case value="0" resultType="com.zlh.mybatis.bean.Employee">
+                <association property="dept" javaType="com.zlh.mybatis.bean.Department">
+                    <id column="did" property="id"/>
+                    <result column="dept_name" property="departmentName"/>
+                </association>
+            </case>
+            <case value="1" resultType="com.zlh.mybatis.bean.Employee">
+                <result column="last_name"  property="email"/>
+            </case>
+        </discriminator>
+    </resultMap>
+
+</mapper>

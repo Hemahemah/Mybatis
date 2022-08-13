@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+
+    <properties resource="dbconfig.properties"/>
+
+
+    <settings>
+        <!--确认开启的信息需要显示的配置-->
+        <setting name="mapUnderscoreToCamelCase" value="true"/><!--开启驼峰命名自动映射-->
+        <!--<setting name="logImpl" value="LOG4J2"/>-->
+        <setting name="cacheEnabled" value="true"/><!--开启二级缓存-->
+    </settings>
+
+
+    <typeAliases>
+        <package name="com.zlh.mybatis.bean"/><!--别名处理器,为java类型起别名-->
+    </typeAliases>
+
+
+    <environments default="mysql">
+        <environment id="mysql">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="${jdbc.driver}"/>
+                <property name="url" value="${jdbc.url}"/>
+                <property name="username" value="${jdbc.username}"/>
+                <property name="password" value="${jdbc.password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <mappers>
+        <mapper resource="mapper/EmployeeMapper.xml"/>
+        <mapper resource="mapper/DepartmentMapper.xml"/>
+    </mappers>
+</configuration>

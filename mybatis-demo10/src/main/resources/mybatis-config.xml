@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+    <properties resource="dbconfig.properties"/>
+
+    <settings>
+        <setting name="mapUnderscoreToCamelCase" value="true"/><!--开启驼峰命名自动映射-->
+        <setting name="logImpl" value="LOG4J2"/>
+    </settings>
+
+
+    <typeAliases>
+        <package name="com.zlh.mybatis.bean"/><!--别名处理器,为java类型起别名-->
+    </typeAliases>
+
+    <typeHandlers>
+        <!--配置自定义类型处理器-->
+        <typeHandler handler="com.zlh.mybatis.dao.EnumStatusTypeHandler" javaType="com.zlh.mybatis.bean.EmpStatus"/>
+    </typeHandlers>
+
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="${jdbc.driver}"/>
+                <property name="url" value="${jdbc.url}"/>
+                <property name="username" value="${jdbc.username}"/>
+                <property name="password" value="${jdbc.password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <mappers>
+        <mapper resource="mapper/EmployeeMapper.xml"/>
+    </mappers>
+</configuration>

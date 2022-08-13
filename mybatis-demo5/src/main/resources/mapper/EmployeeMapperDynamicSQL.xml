@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zlh.mybatis.dao.EmployeeMapperDynamicSQL">
+    <!--
+        需求:查询员工要求携带了哪个字段查询条件就带上这个字段的值
+    -->
+    <select id="getEmpsByConditionIf" resultType="com.zlh.mybatis.bean.Employee">
+        select * from t_employee
+    <!--
+         if test:判断表达式(OGNL)
+            从参数里取值进行判断
+            遇到特殊字符需要进行转义
+         where:将所有的查询条件包括在内,mybatis就会将where标签中拼装的sql,多出来的and或or去掉
+     -->
+    <where>
+        <if test="id!=null">
+             id=#{id}
+        </if>
+        <if test="lastName!=null &amp;&amp;  lastName !=&quot;&quot;">
+            and last_name like #{lastName}
+        </if>
+        <if test="email!=null and email.trim()!=''">
+            and email=#{email}
+        </if>
+        <!--ognl自动进行字符与数据的转换-->
+        <if test="gender == 0 or gender == 1">
+            and gender=#{gender}
+        </if>
+    </where>
+    </select>
+
+
+    <!--
+        trim标签:字符串截取
+          prefix:前缀,给拼串后的整个字符串加前缀
+          prefixOverrides:前缀覆盖,去掉整个字符串前面多余的字符
+          suffix:后缀
+          suffixOverrides:后缀覆盖
+    -->
+    <select id="getEmpsByConditionTrim" resultType="com.zlh.mybatis.bean.Employee">
+        select * from t_employee
+        <trim prefix="where" suffixOverrides="and"><!--去掉后面多出的and和or-->
+            <if test="id!=null">
+                id=#{id} and
+            </if>
+            <if test="lastName!=null &amp;&amp;  lastName !=&quot;&quot;">
+                 last_name like #{lastName} and
+            </if>
+            <if test="email!=null and email.trim()!=''">
+                 email=#{email} and
+            </if>
+            <if test="gender == 0 or gender == 1">
+                 gender=#{gender}
+            </if>
+        </trim>
+    </select>
+
+    <!--
+        需求:带了id就用id查,带了lastName就用lastName查
+        choose标签:分支选择
+    -->
+    <select id="getEmpsByConditionChoose"  resultType="com.zlh.mybatis.bean.Employee">
+        select * from t_employee
+        <where>
+            <choose>
+                <when test="id!=null">
+                    id=#{id}
+                </when>
+                <when test="lastName!=null">
+                    last_name like #{lastName}
+                </when>
+                <when test="email!=null">
+                    email=#{email}
+                </when>
+                <otherwise>
+                    gender = 0
+                </otherwise>
+            </choose>
+        </where>
+    </select>
+
+    <!--
+        数据更新
+        set标签
+    -->
+    <update id="updateEmp">
+        update t_employee
+            <set>
+                <if test="lastName!=null">
+                    last_name = #{lastName},
+                </if>
+                <if test="email!=null ">
+                    email=#{email} ,
+                </if>
+                <if test="gender!=null">
+                    gender=#{gender}
+                </if>
+            </set>
+        where id = #{id}
+    </update>
+
+
+    <!--
+        foreach标签
+            collection:指定要遍历的集合,list类型的参数会特殊处理封装在map集合中,map的key就叫做list
+            item:当前遍历出的元素赋值给指定的变量,#{变量名}就能取出变量的值也就是当前遍历出的元素
+            separator:每个元素的分割符
+            open:遍历出所有结果拼接一个开始字符
+            close:遍历出所有结果拼接一个结束字符
+            index:遍历list时是索引,item为当前值;遍历map是为key,item为map的值
+    -->
+    <select id="getEmpsByConditionForeach" resultType="com.zlh.mybatis.bean.Employee">
+        select * from t_employee
+        <foreach collection="ids" item="item_id" separator="," open="where id in (" close=")">
+            #{item_id}
+        </foreach>
+    </select>
+
+    <!--批量保存-->
+     <insert id="addEmps">
+        insert into t_employee(
+            <include refid="insertColumn"/>
+         ) values
+        <foreach collection="emps" item="emp" separator=",">
+            (#{emp.lastName},#{emp.email},#{emp.gender},#{emp.dept.id})
+        </foreach>
+    </insert>
+
+    <!--
+        内置参数:
+            _parameter:代表整个参数
+                单个参数:_parameter就是这个参数
+                多个参数:参数会被封装为一个map,_parameter代表的就是这个map
+            _databaseId:如果配置了databaseIdProvider标签,就代表了当前的数据库别名
+    -->
+    <!--<select id="getEmpsInnerParameter" resultType="com.zlh.mybatis.bean.Employee">
+        <if test="_databaseId!=null">
+            select * from t_employee
+        </if>
+
+    </select>-->
+
+    <!--
+        bind标签
+    -->
+    <select id="getEmpsInnerParameter" resultType="com.zlh.mybatis.bean.Employee">
+    <bind name="_lastName" value="'%'+lastName+'%'"/>
+    select * from t_employee where last_name like #{_lastName}
+    </select>
+
+    <!--
+        sql标签:抽取可重用的sql片段,方便后边引用
+               将经常使用的列名,或者插入用的列名抽取出来方便使用
+        include标签:引用外部定义的sql
+                   自定义一些property,sql内部就能使用自定义属性${prop}
+    -->
+    <sql id="insertColumn">
+        last_name,email,gender,d_id
+    </sql>
+
+</mapper>

@@ -1,0 +1,3 @@
+com\zlh\mybatis\bean\Employee.class
+com\zlh\mybatis\dao\EmployeeMapper.class
+com\zlh\mybatis\dao\MyPlugin.class
